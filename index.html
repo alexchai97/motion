@@ -6,18 +6,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Easings</title>
 
-     <script>
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var circles = document.querySelectorAll('.circle');
+            const easingFunctions = [
+                { label: 'V2S1', timing: 'cubic-bezier(.35, .05, 0, 1)' },
+                { label: 'V2S2', timing: 'cubic-bezier(.4, .05, 0, 1)' },
+                { label: 'V2S3', timing: 'cubic-bezier(.45, .05, 0, 1)' },
+                { label: 'V3S1', timing: 'cubic-bezier(.35, .05, 0, .88)' },
+                { label: 'V3S2', timing: 'cubic-bezier(.4, .05, 0, .88)' },
+                { label: 'V3S3', timing: 'cubic-bezier(.45, .05, 0, .88)' },
+                { label: 'Ease In Back', timing: 'cubic-bezier(0.36, 0, 0.66, -0.56)' },
+                { label: 'Ease In Circ', timing: 'cubic-bezier(0.55, 0, 1, 0.45)' },
+                { label: 'Ease In Cubic', timing: 'cubic-bezier(0.32, 0, 0.67, 0)' },
+                { label: 'Ease In Expo', timing: 'cubic-bezier(0.7, 0, 0.84, 0)' },
+                { label: 'Ease In Out Back', timing: 'cubic-bezier(0.68, -0.6, 0.32, 1.6)' },
+                { label: 'Ease In Out Circ', timing: 'cubic-bezier(0.85, 0, 0.15, 1)' },
+                { label: 'Ease In Out Cubic', timing: 'cubic-bezier(0.65, 0, 0.35, 1)' },
+                { label: 'Ease In Out Expo', timing: 'cubic-bezier(0.87, 0, 0.13, 1)' },
+                { label: 'Ease In Out Quad', timing: 'cubic-bezier(0.45, 0, 0.55, 1)' },
+                { label: 'Ease In Out Quart', timing: 'cubic-bezier(0.76, 0, 0.24, 1)' },
+                { label: 'Ease In Out Quint', timing: 'cubic-bezier(0.83, 0, 0.17, 1)' },
+                { label: 'Ease In Out Sine', timing: 'cubic-bezier(0.37, 0, 0.63, 1)' },
+                { label: 'Ease In Quad', timing: 'cubic-bezier(0.11, 0, 0.5, 0)' },
+                { label: 'Ease In Quart', timing: 'cubic-bezier(0.5, 0, 0.75, 0)' },
+                { label: 'Ease In Quint', timing: 'cubic-bezier(0.64, 0, 0.78, 0)' },
+                { label: 'Ease In Sine', timing: 'cubic-bezier(0.12, 0, 0.39, 0)' },
+                { label: 'Ease Out Back', timing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+                { label: 'Ease Out Circ', timing: 'cubic-bezier(0, 0.55, 0.45, 1)' },
+                { label: 'Ease Out Cubic', timing: 'cubic-bezier(0.33, 1, 0.68, 1)' },
+                { label: 'Ease Out Expo', timing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+                { label: 'Ease Out Quad', timing: 'cubic-bezier(0.5, 1, 0.89, 1)' },
+                { label: 'Ease Out Quart', timing: 'cubic-bezier(0.25, 1, 0.5, 1)' },
+                { label: 'Ease Out Quint', timing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+                { label: 'Ease Out Sine', timing: 'cubic-bezier(0.61, 1, 0.88, 1)' }
+            ];
 
-            circles.forEach(function (circle) {
+            const container = document.querySelector('.circle-container');
+
+            // Create circles dynamically
+            easingFunctions.forEach(function (ease) {
+                const circle = document.createElement('span');
+                circle.classList.add('circle');
+                circle.textContent = ease.label;
+                circle.style.setProperty('--timing', ease.timing);
+
+                // Apply a random background color to each circle
                 circle.style.backgroundColor = getRandomHSLColor();
 
-                // Add click event listener to copy cubic-bezier to clipboard
+                // Add click event to copy cubic-bezier to clipboard
                 circle.addEventListener('click', function () {
-                    const cubicBezier = getComputedStyle(circle).getPropertyValue('transition-timing-function');
-                    copyToClipboard(cubicBezier.trim());
+                    copyToClipboard(ease.timing);
                 });
+
+                container.appendChild(circle);
             });
 
             function getRandomHSLColor() {
@@ -29,13 +70,12 @@
 
             function copyToClipboard(text) {
                 navigator.clipboard.writeText(text).then(function () {
-                    
+                    alert('Copied to clipboard: ' + text);
                 }, function (err) {
                     console.error('Failed to copy: ', err);
                 });
             }
         });
-
     </script>
 
     <style>
@@ -43,36 +83,6 @@
 
         :root {
             --ease-v2-s1: cubic-bezier(.35, .05, 0, 1);
-            --ease-v2-s2: cubic-bezier(.4, .05, 0, 1);
-            --ease-v2-s3: cubic-bezier(.45, .05, 0, 1);
-            --ease-v3-s1: cubic-bezier(.35, .05, 0, .88);
-            --ease-v3-s2: cubic-bezier(.4, .05, 0, .88);
-            --ease-v3-s3: cubic-bezier(.45, .05, 0, .88);
-
-            --easeInBack: cubic-bezier(0.36, 0, 0.66, -0.56);
-            --easeInCirc: cubic-bezier(0.55, 0, 1, 0.45);
-            --easeInCubic: cubic-bezier(0.32, 0, 0.67, 0);
-            --easeInExpo: cubic-bezier(0.7, 0, 0.84, 0);
-            --easeInOutBack: cubic-bezier(0.68, -0.6, 0.32, 1.6);
-            --easeInOutCirc: cubic-bezier(0.85, 0, 0.15, 1);
-            --easeInOutCubic: cubic-bezier(0.65, 0, 0.35, 1);
-            --easeInOutExpo: cubic-bezier(0.87, 0, 0.13, 1);
-            --easeInOutQuad: cubic-bezier(0.45, 0, 0.55, 1);
-            --easeInOutQuart: cubic-bezier(0.76, 0, 0.24, 1);
-            --easeInOutQuint: cubic-bezier(0.83, 0, 0.17, 1);
-            --easeInOutSine: cubic-bezier(0.37, 0, 0.63, 1);
-            --easeInQuad: cubic-bezier(0.11, 0, 0.5, 0);
-            --easeInQuart: cubic-bezier(0.5, 0, 0.75, 0);
-            --easeInQuint: cubic-bezier(0.64, 0, 0.78, 0);
-            --easeInSine: cubic-bezier(0.12, 0, 0.39, 0);
-            --easeOutBack: cubic-bezier(0.34, 1.56, 0.64, 1);
-            --easeOutCirc: cubic-bezier(0, 0.55, 0.45, 1);
-            --easeOutCubic: cubic-bezier(0.33, 1, 0.68, 1);
-            --easeOutExpo: cubic-bezier(0.16, 1, 0.3, 1);
-            --easeOutQuad: cubic-bezier(0.5, 1, 0.89, 1);
-            --easeOutQuart: cubic-bezier(0.25, 1, 0.5, 1);
-            --easeOutQuint: cubic-bezier(0.22, 1, 0.36, 1);
-            --easeOutSine: cubic-bezier(0.61, 1, 0.88, 1);
         }
 
         * {
@@ -94,7 +104,7 @@
             justify-content: center;
             padding: 2rem;
         }
- 
+
         .circle {
             cursor: pointer;
             position: relative;
@@ -120,66 +130,8 @@
 
 <body>
 
-    <div class="circle-container">
-        <!-- Easing functions for V2 -->
-        <span class="circle" style="--timing: var(--ease-v2-s1);">V2S1</span>
-        <span class="circle" style="--timing: var(--ease-v2-s2);">V2S2</span>
-        <span class="circle" style="--timing: var(--ease-v2-s3);">V2S3</span>
+    <div class="circle-container"></div>
 
-        <!-- Easing functions for V3 -->
-        <span class="circle" style="--timing: var(--ease-v3-s1);">V3S1</span>
-        <span class="circle" style="--timing: var(--ease-v3-s2);">V3S2</span>
-        <span class="circle" style="--timing: var(--ease-v3-s3);">V3S3</span>
-
-        <!-- Standard easing functions -->
-        <span class="circle" style="--timing: var(--easeInBack);">Ease In Back</span>
-        <span class="circle" style="--timing: var(--easeInCirc);">Ease In Circ</span>
-        <span class="circle" style="--timing: var(--easeInCubic);">Ease In Cubic</span>
-        <span class="circle" style="--timing: var(--easeInExpo);">Ease In Expo</span>
-        <span class="circle" style="--timing: var(--easeInOutBack);">Ease In Out Back</span>
-        <span class="circle" style="--timing: var(--easeInOutCirc);">Ease In Out Circ</span>
-        <span class="circle" style="--timing: var(--easeInOutCubic);">Ease In Out Cubic</span>
-        <span class="circle" style="--timing: var(--easeInOutExpo);">Ease In Out Expo</span>
-        <span class="circle" style="--timing: var(--easeInOutQuad);">Ease In Out Quad</span>
-        <span class="circle" style="--timing: var(--easeInOutQuart);">Ease In Out Quart</span>
-        <span class="circle" style="--timing: var(--easeInOutQuint);">Ease In Out Quint</span>
-        <span class="circle" style="--timing: var(--easeInOutSine);">Ease In Out Sine</span>
-        <span class="circle" style="--timing: var(--easeInQuad);">Ease In Quad</span>
-        <span class="circle" style="--timing: var(--easeInQuart);">Ease In Quart</span>
-        <span class="circle" style="--timing: var(--easeInQuint);">Ease In Quint</span>
-        <span class="circle" style="--timing: var(--easeInSine);">Ease In Sine</span>
-        <span class="circle" style="--timing: var(--easeOutBack);">Ease Out Back</span>
-        <span class="circle" style="--timing: var(--easeOutCirc);">Ease Out Circ</span>
-        <span class="circle" style="--timing: var(--easeOutCubic);">Ease Out Cubic</span>
-        <span class="circle" style="--timing: var(--easeOutExpo);">Ease Out Expo</span>
-        <span class="circle" style="--timing: var(--easeOutQuad);">Ease Out Quad</span>
-        <span class="circle" style="--timing: var(--easeOutQuart);">Ease Out Quart</span>
-        <span class="circle" style="--timing: var(--easeOutQuint);">Ease Out Quint</span>
-        <span class="circle" style="--timing: var(--easeOutSine);">Ease Out Sine</span>
-    </div>
-
-
-    <script src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js">
-
-    </script>
-
-    <script>
-        const lenis = new Lenis()
-
-        lenis.on('scroll', (e) => {
-            console.log(e)
-        })
-
-        function raf(time) {
-            lenis.raf(time)
-            requestAnimationFrame(raf)
-        }
-
-        requestAnimationFrame(raf)
-
-    </script>
-
-    
 </body>
 
 </html>
