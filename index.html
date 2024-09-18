@@ -6,12 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Easings</title>
 
-    <script>
+     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var circles = document.querySelectorAll('.circle');
 
             circles.forEach(function (circle) {
                 circle.style.backgroundColor = getRandomHSLColor();
+
+                // Add click event listener to copy cubic-bezier to clipboard
+                circle.addEventListener('click', function () {
+                    const cubicBezier = getComputedStyle(circle).getPropertyValue('transition-timing-function');
+                    copyToClipboard(cubicBezier.trim());
+                });
             });
 
             function getRandomHSLColor() {
@@ -19,6 +25,14 @@
                 var saturation = 0 + '%';
                 var lightness = Math.floor(Math.random() * 70) + '%';
                 return 'hsl(' + hue + ',' + saturation + ',' + lightness + ')';
+            }
+
+            function copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(function () {
+                    alert('Copied to clipboard: ' + text);
+                }, function (err) {
+                    console.error('Failed to copy: ', err);
+                });
             }
         });
 
