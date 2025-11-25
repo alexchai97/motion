@@ -1,139 +1,453 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Easings</title>
+    <title>Bezier Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- RESET & VARIABLES --- */
+        :root {
+            --bg: #0b0b0b;
+            --surface: #141414;
+            --surface-hover: #1a1a1a;
+            --border: #333;
+            --text-main: #ececec;
+            --text-muted: #888;
+            --accent: #dfff00; /* Acid Green for Awwwards vibe */
+            --cursor-size: 20px;
+            --font-main: 'Space Grotesk', sans-serif;
+            --gap: 1.5rem;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            cursor: none; /* Hide default cursor */
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        /* --- NOISE OVERLAY --- */
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 900;
+            opacity: 0.05;
+            background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+        }
+
+        /* --- CUSTOM CURSOR --- */
+        .cursor-dot,
+        .cursor-outline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent);
+        }
+
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+
+        /* Hover State for Cursor */
+        body.hovering .cursor-outline {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: transparent;
+            backdrop-filter: blur(2px);
+        }
+
+        /* --- LAYOUT --- */
+        header {
+            padding: 4rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 300;
+            letter-spacing: -0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        /* --- CATEGORY SECTIONS --- */
+        .category-group {
+            margin-bottom: 6rem;
+        }
+
+        .category-title {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .category-title::before {
+            content: '';
+            display: block;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent);
+            border-radius: 50%;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--gap);
+        }
+
+        /* --- CARDS --- */
+        .card {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 8px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background-color: var(--surface-hover);
+            border-color: var(--text-muted);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .card-label {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .card-code {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: monospace;
+            opacity: 0.5;
+            margin-top: 0.2rem;
+        }
+
+        /* --- VISUALIZER --- */
+        .visualizer {
+            width: 100%;
+            height: 60px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 4px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            overflow: hidden;
+        }
+
+        /* The track line */
+        .visualizer::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            right: 20px;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            z-index: 1;
+        }
+
+        /* The moving ball */
+        .ball {
+            width: 12px;
+            height: 12px;
+            background-color: var(--text-main);
+            border-radius: 50%;
+            position: relative;
+            z-index: 2;
+            left: 0;
+            /* Animation set in JS */
+        }
+
+        .card:hover .ball {
+            animation-name: moveRight;
+            animation-duration: 1s;
+            animation-iteration-count: infinite;
+            animation-fill-mode: both;
+            /* animation-timing-function is set inline via JS */
+        }
+
+        .card:active .ball {
+            background-color: var(--accent);
+        }
+
+        @keyframes moveRight {
+            0% { transform: translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(220px); opacity: 0; } /* Adjust based on card width approx */
+        }
+
+        /* --- COPY ICON --- */
+        .copy-hint {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            opacity: 0;
+            transform: translateX(10px);
+            transition: 0.3s;
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .card:hover .copy-hint {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* --- TOAST --- */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--accent);
+            color: black;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+
+        .toast.active {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* --- RESPONSIVE ADJUSTMENTS --- */
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .grid { grid-template-columns: 1fr; }
+            .cursor-dot, .cursor-outline { display: none; } /* Disable custom cursor on touch */
+            * { cursor: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="noise"></div>
+
+    <!-- Custom Cursor Elements -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <header>
+        <h1>Bezier Library</h1>
+        <div class="subtitle">Curated easing collection for motion design</div>
+    </header>
+
+    <main id="app">
+        <!-- Content injected by JS -->
+    </main>
+
+    <div class="toast" id="toast">Copied to Clipboard!</div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            
+            // --- DATA ---
             const easingFunctions = [
+                { label: 'Ease In Sine', timing: 'cubic-bezier(0.12, 0, 0.39, 0)' },
+                { label: 'Ease In Quad', timing: 'cubic-bezier(0.11, 0, 0.5, 0)' },
+                { label: 'Ease In Cubic', timing: 'cubic-bezier(0.32, 0, 0.67, 0)' },
+                { label: 'Ease In Quart', timing: 'cubic-bezier(0.5, 0, 0.75, 0)' },
+                { label: 'Ease In Quint', timing: 'cubic-bezier(0.64, 0, 0.78, 0)' },
+                { label: 'Ease In Expo', timing: 'cubic-bezier(0.7, 0, 0.84, 0)' },
+                { label: 'Ease In Circ', timing: 'cubic-bezier(0.55, 0, 1, 0.45)' },
+                { label: 'Ease In Back', timing: 'cubic-bezier(0.36, 0, 0.66, -0.56)' },
+
+                { label: 'Ease Out Sine', timing: 'cubic-bezier(0.61, 1, 0.88, 1)' },
+                { label: 'Ease Out Quad', timing: 'cubic-bezier(0.5, 1, 0.89, 1)' },
+                { label: 'Ease Out Cubic', timing: 'cubic-bezier(0.33, 1, 0.68, 1)' },
+                { label: 'Ease Out Quart', timing: 'cubic-bezier(0.25, 1, 0.5, 1)' },
+                { label: 'Ease Out Quint', timing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+                { label: 'Ease Out Expo', timing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+                { label: 'Ease Out Circ', timing: 'cubic-bezier(0, 0.55, 0.45, 1)' },
+                { label: 'Ease Out Back', timing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+
+                { label: 'Ease In Out Sine', timing: 'cubic-bezier(0.37, 0, 0.63, 1)' },
+                { label: 'Ease In Out Quad', timing: 'cubic-bezier(0.45, 0, 0.55, 1)' },
+                { label: 'Ease In Out Cubic', timing: 'cubic-bezier(0.65, 0, 0.35, 1)' },
+                { label: 'Ease In Out Quart', timing: 'cubic-bezier(0.76, 0, 0.24, 1)' },
+                { label: 'Ease In Out Quint', timing: 'cubic-bezier(0.83, 0, 0.17, 1)' },
+                { label: 'Ease In Out Expo', timing: 'cubic-bezier(0.87, 0, 0.13, 1)' },
+                { label: 'Ease In Out Circ', timing: 'cubic-bezier(0.85, 0, 0.15, 1)' },
+                { label: 'Ease In Out Back', timing: 'cubic-bezier(0.68, -0.6, 0.32, 1.6)' },
+
                 { label: 'V2S1', timing: 'cubic-bezier(.35, .05, 0, 1)' },
                 { label: 'V2S2', timing: 'cubic-bezier(.4, .05, 0, 1)' },
                 { label: 'V2S3', timing: 'cubic-bezier(.45, .05, 0, 1)' },
                 { label: 'V3S1', timing: 'cubic-bezier(.35, .05, 0, .88)' },
                 { label: 'V3S2', timing: 'cubic-bezier(.4, .05, 0, .88)' },
-                { label: 'V3S3', timing: 'cubic-bezier(.45, .05, 0, .88)' },
-                { label: 'Ease In Back', timing: 'cubic-bezier(0.36, 0, 0.66, -0.56)' },
-                { label: 'Ease In Circ', timing: 'cubic-bezier(0.55, 0, 1, 0.45)' },
-                { label: 'Ease In Cubic', timing: 'cubic-bezier(0.32, 0, 0.67, 0)' },
-                { label: 'Ease In Expo', timing: 'cubic-bezier(0.7, 0, 0.84, 0)' },
-                { label: 'Ease In Out Back', timing: 'cubic-bezier(0.68, -0.6, 0.32, 1.6)' },
-                { label: 'Ease In Out Circ', timing: 'cubic-bezier(0.85, 0, 0.15, 1)' },
-                { label: 'Ease In Out Cubic', timing: 'cubic-bezier(0.65, 0, 0.35, 1)' },
-                { label: 'Ease In Out Expo', timing: 'cubic-bezier(0.87, 0, 0.13, 1)' },
-                { label: 'Ease In Out Quad', timing: 'cubic-bezier(0.45, 0, 0.55, 1)' },
-                { label: 'Ease In Out Quart', timing: 'cubic-bezier(0.76, 0, 0.24, 1)' },
-                { label: 'Ease In Out Quint', timing: 'cubic-bezier(0.83, 0, 0.17, 1)' },
-                { label: 'Ease In Out Sine', timing: 'cubic-bezier(0.37, 0, 0.63, 1)' },
-                { label: 'Ease In Quad', timing: 'cubic-bezier(0.11, 0, 0.5, 0)' },
-                { label: 'Ease In Quart', timing: 'cubic-bezier(0.5, 0, 0.75, 0)' },
-                { label: 'Ease In Quint', timing: 'cubic-bezier(0.64, 0, 0.78, 0)' },
-                { label: 'Ease In Sine', timing: 'cubic-bezier(0.12, 0, 0.39, 0)' },
-                { label: 'Ease Out Back', timing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
-                { label: 'Ease Out Circ', timing: 'cubic-bezier(0, 0.55, 0.45, 1)' },
-                { label: 'Ease Out Cubic', timing: 'cubic-bezier(0.33, 1, 0.68, 1)' },
-                { label: 'Ease Out Expo', timing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
-                { label: 'Ease Out Quad', timing: 'cubic-bezier(0.5, 1, 0.89, 1)' },
-                { label: 'Ease Out Quart', timing: 'cubic-bezier(0.25, 1, 0.5, 1)' },
-                { label: 'Ease Out Quint', timing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
-                { label: 'Ease Out Sine', timing: 'cubic-bezier(0.61, 1, 0.88, 1)' }
+                { label: 'V3S3', timing: 'cubic-bezier(.45, .05, 0, .88)' }
             ];
 
-            const container = document.querySelector('.circle-container');
+            const app = document.getElementById('app');
 
-            // Create circles dynamically
-            easingFunctions.forEach(function (ease) {
-                const circle = document.createElement('span');
-                circle.classList.add('circle');
-                circle.textContent = ease.label;
-                circle.style.setProperty('--timing', ease.timing);
+            // --- CATEGORIZATION LOGIC ---
+            const categories = {
+                'Ease In Out': [],
+                'Ease In': [],
+                'Ease Out': [],
+                'Custom / Other': []
+            };
 
-                // Apply a random background color to each circle
-                circle.style.backgroundColor = getRandomHSLColor();
-
-                // Add click event to copy cubic-bezier to clipboard
-                circle.addEventListener('click', function () {
-                    copyToClipboard(ease.timing);
-                });
-
-                container.appendChild(circle);
+            easingFunctions.forEach(ease => {
+                if (ease.label.toLowerCase().includes('in out')) {
+                    categories['Ease In Out'].push(ease);
+                } else if (ease.label.toLowerCase().includes('ease in')) {
+                    categories['Ease In'].push(ease);
+                } else if (ease.label.toLowerCase().includes('ease out')) {
+                    categories['Ease Out'].push(ease);
+                } else {
+                    categories['Custom / Other'].push(ease);
+                }
             });
 
-            function getRandomHSLColor() {
-                var hue = Math.floor(Math.random() * 360);
-                var saturation = 0 + '%';
-                var lightness = Math.floor(Math.random() * 70) + '%';
-                return 'hsl(' + hue + ',' + saturation + ',' + lightness + ')';
+            // --- RENDER LOGIC ---
+            for (const [categoryName, items] of Object.entries(categories)) {
+                if(items.length === 0) continue;
+
+                const section = document.createElement('section');
+                section.classList.add('category-group');
+
+                const title = document.createElement('h2');
+                title.classList.add('category-title');
+                title.textContent = categoryName;
+                section.appendChild(title);
+
+                const grid = document.createElement('div');
+                grid.classList.add('grid');
+
+                items.forEach(ease => {
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+                    card.setAttribute('role', 'button'); // Accessibility
+                    
+                    // Interaction Hooks for Cursor
+                    card.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+                    card.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+                    card.addEventListener('click', () => copyToClipboard(ease.timing));
+
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <div>
+                                <div class="card-label">${ease.label}</div>
+                                <div class="card-code">${ease.timing}</div>
+                            </div>
+                            <span class="copy-hint">COPY</span>
+                        </div>
+                        <div class="visualizer">
+                            <div class="ball" style="animation-timing-function: ${ease.timing}"></div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                section.appendChild(grid);
+                app.appendChild(section);
             }
+
+            // --- CLIPBOARD TOAST ---
+            const toast = document.getElementById('toast');
+            let toastTimeout;
 
             function copyToClipboard(text) {
                 navigator.clipboard.writeText(text).then(function () {
-                    
+                    toast.classList.add('active');
+                    clearTimeout(toastTimeout);
+                    toastTimeout = setTimeout(() => {
+                        toast.classList.remove('active');
+                    }, 2000);
                 }, function (err) {
                     console.error('Failed to copy: ', err);
                 });
             }
+
+            // --- CUSTOM CURSOR LOGIC ---
+            const cursorDot = document.querySelector('.cursor-dot');
+            const cursorOutline = document.querySelector('.cursor-outline');
+
+            window.addEventListener('mousemove', function(e) {
+                const posX = e.clientX;
+                const posY = e.clientY;
+
+                // Dot follows immediately
+                cursorDot.style.left = `${posX}px`;
+                cursorDot.style.top = `${posY}px`;
+
+                // Outline follows with slight delay (animation done via CSS transition, just updating pos)
+                // Using animate for smoother high-refresh tracking is better than setting style directly for 'drag' effect
+                cursorOutline.animate({
+                    left: `${posX}px`,
+                    top: `${posY}px`
+                }, { duration: 500, fill: "forwards" });
+            });
         });
     </script>
-
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400&display=swap');
-
-        :root {
-            --ease-v2-s1: cubic-bezier(.35, .05, 0, 1);
-        }
-
-        * {
-            transition-duration: 500ms;
-            box-sizing: border-box;
-        }
-
-        body {
-            height: 100vh;
-            width: 100vw;
-            font-family: 'outfit';
-        }
-
-        .circle-container {
-            display: flex;
-            gap: 5rem;
-            flex-wrap: wrap;
-            max-width: 800px;
-            margin: 0 auto;
-            width: 100vw;
-            justify-content: center;
-            padding: 2rem;
-        }
-
-        .circle {
-            cursor: pointer;
-            position: relative;
-            border-radius: 100%;
-            background-color: var(--color);
-            color: var(--color);
-            height: 100px;
-            aspect-ratio: 1;
-            display: grid;
-            place-items: center;
-            padding: 1rem;
-            text-align: center;
-            color: #FFF;
-            transition-timing-function: var(--timing);
-        }
-
-        .circle:hover {
-            background-color: #008b8b !important;
-            transform: scale(1.2);
-        }
-    </style>
-</head>
-
-<body>
-
-    <div class="circle-container"></div>
-
 </body>
-
 </html>
